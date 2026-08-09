@@ -25,6 +25,29 @@
   --xfl-gradient-hero: linear-gradient(135deg, #0A0E17 0%, #141B2D 50%, #1B5E20 100%);
 }
 
+[data-theme="pitch"] {
+  --color-xfl-bg: #050508;
+  --color-xfl-card: #0D0F18;
+  --color-xfl-card-hover: #151824;
+  --color-xfl-border: #1F2335;
+}
+
+[data-theme="navy"] {
+  --color-xfl-bg: #060B18;
+  --color-xfl-card: #0F172A;
+  --color-xfl-card-hover: #1E293B;
+  --color-xfl-border: #334155;
+  --color-xfl-accent: #38BDF8;
+}
+
+[data-theme="crimson"] {
+  --color-xfl-bg: #120608;
+  --color-xfl-card: #1E0D11;
+  --color-xfl-card-hover: #2F151B;
+  --color-xfl-border: #421D25;
+  --color-xfl-accent: #F43F5E;
+}
+
 * {
   box-sizing: border-box;
 }
