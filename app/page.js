@@ -1,221 +1,436 @@
 'use client';
-import { demoOyinlar, topSkorlar, ligJadvali, demoKlublar, demoStadionlar, demoOyinchilar } from '@/data/demo-data';
+
+import { useState } from 'react';
 import Link from 'next/link';
+import { demoOyinlar, topSkorlar, ligJadvali, demoKlublar, demoStadionlar, demoOyinchilar, formatlar } from '@/data/demo-data';
+import PlayerCard from '@/components/PlayerCard';
+import CreatePlayerModal from '@/components/CreatePlayerModal';
+import ClubModal from '@/components/ClubModal';
+import StadiumModal from '@/components/StadiumModal';
 
 export default function Home() {
+  const [isCreateCardOpen, setIsCreateCardOpen] = useState(false);
+  const [selectedClub, setSelectedClub] = useState(null);
+  const [selectedStadium, setSelectedStadium] = useState(null);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [activeFormat, setActiveFormat] = useState('all');
+
   const upcomingMatches = demoOyinlar?.filter(m => m.status === 'scheduled') || [];
   const recentResults = demoOyinlar?.filter(m => m.status === 'completed') || [];
-  const topTeams = ligJadvali?.slice(0, 5) || [];
+  const topTeams = ligJadvali || [];
   const scorers = topSkorlar || [];
 
+  // Top featured player for the spotlight card
+  const featuredPlayer = demoOyinchilar[0];
+
+  // Filtered clubs by format
+  const filteredClubs = demoKlublar.filter(c => activeFormat === 'all' || c.format === activeFormat);
+  // Filtered stadiums by format
+  const filteredStadiums = demoStadionlar.filter(s => activeFormat === 'all' || s.fieldSize === activeFormat);
+
   return (
-    <div className="container mx-auto px-4 py-8 flex flex-col gap-16">
-      
-      {/* HERO SECTION */}
-      <section className="relative flex flex-col items-center justify-center text-center py-24 px-4 overflow-hidden rounded-3xl glass-card">
-        {/* Animated Background Elements */}
-        <div className="absolute top-10 left-10 animate-[float_3s_ease-in-out_infinite] opacity-20">
-          <svg className="w-16 h-16 text-xfl-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 18A8 8 0 1 1 20 12A8 8 0 0 1 12 20Z"/></svg>
-        </div>
-        <div className="absolute bottom-10 right-10 animate-[float_4s_ease-in-out_infinite_reverse] opacity-20">
-           <svg className="w-20 h-20 text-xfl-orange" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 18A8 8 0 1 1 20 12A8 8 0 0 1 12 20Z"/></svg>
+    <div className="page-container pb-24 space-y-16">
+
+      {/* HERO SECTION WITH FEATURED FC26 CARD */}
+      <section className="relative glass-card p-6 md:p-12 overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10">
+        {/* Glowing Background Orbs */}
+        <div className="absolute -top-20 -left-20 w-80 h-80 bg-[var(--color-xfl-primary)]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[var(--color-xfl-accent)]/15 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Hero Left Content */}
+        <div className="flex-1 text-center lg:text-left z-10 space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black">
+            <span>⚡ SAMARQAND VILOYATI RASMIY PLATFORMASI</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl font-black leading-tight tracking-tight">
+            Samarqand <span className="gradient-text">Havaskor Futbol</span> Ligasi
+          </h1>
+
+          <p className="text-base sm:text-xl text-[var(--color-xfl-text-dim)] max-w-xl">
+            6x6, 9x9 va 11x11 formatlarda jamoa toping, FC26 o'yinchi kartangizni yarating va stadionlarni bron qiling.
+          </p>
+
+          {/* Interactive Hero Buttons */}
+          <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-2">
+            <Link
+              href="/klublar"
+              className="btn-primary py-4 px-8 text-sm font-black shadow-lg shadow-green-500/25 flex items-center gap-2"
+            >
+              🛡️ Jamoalarga Qo'shilish
+            </Link>
+
+            <button
+              onClick={() => setIsCreateCardOpen(true)}
+              className="btn-orange py-4 px-8 text-sm font-black shadow-lg shadow-orange-500/25 flex items-center gap-2"
+            >
+              ⚽ FC26 O'yinchi Karta Yaratish
+            </button>
+          </div>
+
+          {/* Quick Counter Stats */}
+          <div className="grid grid-cols-4 gap-4 pt-6 border-t border-[var(--color-xfl-border)] text-center lg:text-left">
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-white">{demoKlublar.length} ta</div>
+              <div className="text-[10px] font-extrabold text-[var(--color-xfl-text-dim)] uppercase">Klublar</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-[var(--color-xfl-accent)]">{demoOyinchilar.length * 5}+</div>
+              <div className="text-[10px] font-extrabold text-[var(--color-xfl-text-dim)] uppercase">O'yinchilar</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-white">{demoStadionlar.length} ta</div>
+              <div className="text-[10px] font-extrabold text-[var(--color-xfl-text-dim)] uppercase">Stadionlar</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-amber-400">3 ta</div>
+              <div className="text-[10px] font-extrabold text-[var(--color-xfl-text-dim)] uppercase">Ligalari</div>
+            </div>
+          </div>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-xfl-accent to-xfl-primary-light">
-          Samarqand xavaskor futbolining yangi davri
-        </h1>
-        <p className="text-xl md:text-2xl text-xfl-text-dim mb-10 max-w-2xl">
-          Jamoa top, raqib top, maydon top — hammasi bir joyda
-        </p>
-        <div className="flex flex-wrap gap-4 justify-center mb-16">
-          <button className="px-8 py-4 rounded-full bg-gradient-to-r from-xfl-primary to-xfl-primary-light text-white font-bold text-lg hover:scale-105 transition-transform shadow-[0_0_20px_rgba(27,94,32,0.6)]">
-            Jamoalarga qo'shiling
-          </button>
-          <button className="px-8 py-4 rounded-full border-2 border-xfl-orange text-xfl-orange font-bold text-lg hover:bg-xfl-orange hover:text-white transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,111,0,0.3)] hover:shadow-[0_0_25px_rgba(255,111,0,0.6)]">
-            O'yinchi kartasi yarating
-          </button>
-        </div>
+        {/* Hero Right: Featured FC26 Player Spotlight */}
+        <div className="z-10 flex flex-col items-center shrink-0">
+          <div className="text-[10px] font-extrabold text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+            <span>★ HAFTA O'YINCHISI (FC26 SPOTLIGHT)</span>
+          </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full max-w-4xl border-t border-xfl-border pt-10">
-          <div className="flex flex-col items-center">
-            <span className="text-4xl font-bold text-white mb-2">8</span>
-            <span className="text-xfl-text-dim">Klublar</span>
+          <div
+            className="transform hover:scale-105 transition-transform duration-300 cursor-pointer drop-shadow-2xl"
+            onClick={() => setSelectedPlayer(featuredPlayer)}
+          >
+            <PlayerCard player={featuredPlayer} />
           </div>
-          <div className="flex flex-col items-center">
-            <span className="text-4xl font-bold text-white mb-2">50+</span>
-            <span className="text-xfl-text-dim">O'yinchilar</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-4xl font-bold text-white mb-2">8</span>
-            <span className="text-xfl-text-dim">Stadionlar</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-4xl font-bold text-white mb-2">26</span>
-            <span className="text-xfl-text-dim">O'yinlar</span>
+
+          <div className="mt-3 text-center">
+            <span className="text-xs font-bold text-gray-300">Jasurbek Normatov • Afrosiyob FC</span>
+            <div className="text-[10px] text-emerald-400 font-extrabold">18 Gol • 8.4 Rating</div>
           </div>
         </div>
       </section>
 
-      {/* THREE MAIN CARDS */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link href="/klublar" className="glass-card p-6 flex flex-col items-center text-center group hover:scale-105 transition-transform border-t-4 border-t-xfl-primary">
-           <div className="w-16 h-16 rounded-full bg-xfl-bg flex items-center justify-center mb-4 group-hover:shadow-[0_0_15px_rgba(0,230,118,0.5)] transition-shadow">
-             <span className="text-3xl">🛡️</span>
-           </div>
-           <h3 className="text-xl font-bold mb-2">Klublar</h3>
-           <p className="text-xfl-text-dim">Barcha jamoalar ro'yxati, tarkiblar va statistika bilan tanishing.</p>
-        </Link>
-        <Link href="/transferlar" className="glass-card p-6 flex flex-col items-center text-center group hover:scale-105 transition-transform border-t-4 border-t-xfl-orange">
-           <div className="w-16 h-16 rounded-full bg-xfl-bg flex items-center justify-center mb-4 group-hover:shadow-[0_0_15px_rgba(255,111,0,0.5)] transition-shadow">
-             <span className="text-3xl">🔄</span>
-           </div>
-           <h3 className="text-xl font-bold mb-2">Transfer Oynasi</h3>
-           <p className="text-xfl-text-dim">Erkin agentlar va jamoa izlayotgan o'yinchilar.</p>
-        </Link>
-        <Link href="/stadionlar" className="glass-card p-6 flex flex-col items-center text-center group hover:scale-105 transition-transform border-t-4 border-t-xfl-accent">
-           <div className="w-16 h-16 rounded-full bg-xfl-bg flex items-center justify-center mb-4 group-hover:shadow-[0_0_15px_rgba(0,230,118,0.5)] transition-shadow">
-             <span className="text-3xl">🏟️</span>
-           </div>
-           <h3 className="text-xl font-bold mb-2">Stadionlar</h3>
-           <p className="text-xfl-text-dim">O'yinlar o'tkaziladigan maydonlar va ularning joylashuvi.</p>
-        </Link>
+      {/* 3 FORMAT QUICK NAVIGATION (6x6, 9x9, 11x11) */}
+      <section className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-black text-white flex items-center gap-2">
+              <span className="w-2.5 h-6 bg-[var(--color-xfl-accent)] rounded-full" />
+              Liga Formatlari (6x6, 9x9, 11x11)
+            </h2>
+            <p className="text-xs text-[var(--color-xfl-text-dim)] mt-1">
+              O'zingizga mos keladigan o'yin formatini tanlang
+            </p>
+          </div>
+
+          <div className="flex bg-[var(--color-xfl-card)] p-1 rounded-xl border border-[var(--color-xfl-border)]">
+            <button
+              onClick={() => setActiveFormat('all')}
+              className={`px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
+                activeFormat === 'all' ? 'bg-[var(--color-xfl-primary)] text-white shadow' : 'text-[var(--color-xfl-text-dim)]'
+              }`}
+            >
+              Barchasi
+            </button>
+            {formatlar.map(f => (
+              <button
+                key={f.id}
+                onClick={() => setActiveFormat(f.id)}
+                className={`px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
+                  activeFormat === f.id ? 'bg-[var(--color-xfl-accent)] text-black shadow font-black' : 'text-[var(--color-xfl-text-dim)]'
+                }`}
+              >
+                {f.icon} {f.id}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 3 MAIN NAVIGATION CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link
+            href="/klublar"
+            className="glass-card p-6 flex flex-col justify-between group hover:scale-[1.03] transition-all border-t-4 border-t-emerald-500"
+          >
+            <div>
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-3xl mb-4 text-emerald-400 group-hover:scale-110 transition-transform">
+                🛡️
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                Klublar Bo'limi
+              </h3>
+              <p className="text-xs text-[var(--color-xfl-text-dim)] leading-relaxed">
+                Samarqanddagi barcha 6x6, 9x9 va 11x11 klublar, ularning tarkibi va natijalari bilan tanishing.
+              </p>
+            </div>
+            <div className="mt-6 flex items-center justify-between text-xs font-extrabold text-emerald-400">
+              <span>{filteredClubs.length} ta jamoa mavjud</span>
+              <span>Kirish →</span>
+            </div>
+          </Link>
+
+          <Link
+            href="/transferlar"
+            className="glass-card p-6 flex flex-col justify-between group hover:scale-[1.03] transition-all border-t-4 border-t-amber-500"
+          >
+            <div>
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl mb-4 text-amber-400 group-hover:scale-110 transition-transform">
+                🔄
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 group-hover:text-amber-400 transition-colors">
+                Transfer Oynasi
+              </h3>
+              <p className="text-xs text-[var(--color-xfl-text-dim)] leading-relaxed">
+                Erkin o'yinchilar bozori. FC26 kartochkangizni yaratib o'zingizga mos jamoa toping.
+              </p>
+            </div>
+            <div className="mt-6 flex items-center justify-between text-xs font-extrabold text-amber-400">
+              <span>{demoOyinchilar.length} ta o'yinchi bozorida</span>
+              <span>Kirish →</span>
+            </div>
+          </Link>
+
+          <Link
+            href="/stadionlar"
+            className="glass-card p-6 flex flex-col justify-between group hover:scale-[1.03] transition-all border-t-4 border-t-blue-500"
+          >
+            <div>
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-3xl mb-4 text-blue-400 group-hover:scale-110 transition-transform">
+                🏟️
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 group-hover:text-blue-400 transition-colors">
+                Stadionlar Tizimi
+              </h3>
+              <p className="text-xs text-[var(--color-xfl-text-dim)] leading-relaxed">
+                6x6, 9x9 va 11x11 futbol maydonlarini qidiring va band qilingan vaqtlarni real-vaqtda ko'ring.
+              </p>
+            </div>
+            <div className="mt-6 flex items-center justify-between text-xs font-extrabold text-blue-400">
+              <span>{filteredStadiums.length} ta maydon ochiq</span>
+              <span>Kirish →</span>
+            </div>
+          </Link>
+        </div>
       </section>
 
-      {/* MATCHES & LEAGUE TABLE ROW */}
+      {/* MATCHES & SIDEBAR (LEAGUE TABLE + TOP SCORERS) */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <div className="lg:col-span-2 flex flex-col gap-8">
+
+        {/* LEFT 2 COLS: UPCOMING & RECENT MATCHES */}
+        <div className="lg:col-span-2 space-y-8">
+
           {/* UPCOMING MATCHES */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <span className="w-2 h-8 bg-xfl-accent rounded-full"></span>
-              Kelgusi O'yinlar
-            </h2>
-            <div className="grid gap-4">
-              {upcomingMatches.slice(0, 2).map((match, idx) => (
-                <div key={idx} className="glass-card p-4 flex flex-col md:flex-row justify-between items-center gap-4 hover:bg-xfl-card-hover transition-colors">
-                  <div className="flex-1 text-right font-semibold text-lg">{match.homeTeam}</div>
-                  <div className="flex flex-col items-center px-6 py-2 bg-xfl-bg rounded-lg">
-                    <span className="text-sm text-xfl-text-dim">{match.date}</span>
-                    <span className="font-bold text-xfl-accent">VS</span>
+          <div className="glass-card p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <span>📅</span> Navbatdagi O'yinlar
+              </h3>
+              <Link href="/klublar" className="text-xs font-bold text-[var(--color-xfl-accent)] hover:underline">
+                Hammasi →
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {upcomingMatches.map((m, idx) => (
+                <div
+                  key={idx}
+                  className="bg-[var(--color-xfl-bg)] p-4 rounded-2xl border border-[var(--color-xfl-border)] flex flex-col sm:flex-row justify-between items-center gap-4 hover:border-[var(--color-xfl-accent)] transition-all"
+                >
+                  <div className="flex-1 text-center sm:text-right font-extrabold text-sm text-white">
+                    {m.homeTeam}
                   </div>
-                  <div className="flex-1 text-left font-semibold text-lg">{match.awayTeam}</div>
-                  <div className="w-full md:w-auto text-center md:text-right text-xs text-xfl-text-dim mt-2 md:mt-0">
-                    🏟️ {match.stadium}
+
+                  <div className="px-4 py-1.5 rounded-xl bg-black/60 border border-white/10 text-center shrink-0">
+                    <span className="text-[10px] text-gray-400 font-bold block">{m.date}</span>
+                    <span className="text-xs font-black text-[var(--color-xfl-accent)]">VS</span>
+                    <span className="text-[9px] text-amber-400 font-black block">{m.format || '11x11'}</span>
+                  </div>
+
+                  <div className="flex-1 text-center sm:text-left font-extrabold text-sm text-white">
+                    {m.awayTeam}
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      const stad = demoStadionlar.find(s => s.name.includes(m.stadium.split(' ')[0]));
+                      if (stad) setSelectedStadium(stad);
+                    }}
+                    className="text-[11px] font-bold text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-xl border border-blue-500/30 cursor-pointer hover:bg-blue-500/20"
+                  >
+                    🏟️ {m.stadium}
                   </div>
                 </div>
               ))}
-              {upcomingMatches.length === 0 && (
-                <div className="text-xfl-text-dim italic text-center p-4">Kelgusi o'yinlar topilmadi.</div>
-              )}
             </div>
           </div>
 
-          {/* RECENT RESULTS */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <span className="w-2 h-8 bg-xfl-orange rounded-full"></span>
-              So'nggi Natijalar
-            </h2>
-            <div className="grid gap-4">
-              {recentResults.slice(0, 2).map((match, idx) => (
-                <div key={idx} className="glass-card p-4 flex flex-col md:flex-row justify-between items-center gap-4 hover:bg-xfl-card-hover transition-colors">
-                  <div className="flex-1 text-right font-semibold text-lg">{match.homeTeam}</div>
-                  <div className="flex flex-col items-center px-6 py-2 bg-xfl-bg rounded-lg shadow-inner">
-                    <span className="text-2xl font-black">{match.homeScore} - {match.awayScore}</span>
+          {/* RECENT MATCH RESULTS */}
+          <div className="glass-card p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <span>🏆</span> So'nggi Natijalar
+              </h3>
+              <span className="text-xs text-[var(--color-xfl-text-dim)] font-semibold">Tugallangan o'yinlar</span>
+            </div>
+
+            <div className="space-y-3">
+              {recentResults.map((m, idx) => (
+                <div
+                  key={idx}
+                  className="bg-[var(--color-xfl-bg)] p-4 rounded-2xl border border-[var(--color-xfl-border)] flex justify-between items-center gap-4"
+                >
+                  <div className="flex-1 text-right font-extrabold text-sm text-white">
+                    {m.homeTeam}
                   </div>
-                  <div className="flex-1 text-left font-semibold text-lg">{match.awayTeam}</div>
+
+                  <div className="px-5 py-2 rounded-xl bg-black/80 border border-emerald-500/30 text-center shrink-0">
+                    <span className="text-base font-black text-[var(--color-xfl-accent)]">
+                      {m.homeScore} - {m.awayScore}
+                    </span>
+                    <span className="text-[9px] text-gray-400 font-bold block">{m.date}</span>
+                  </div>
+
+                  <div className="flex-1 text-left font-extrabold text-sm text-white">
+                    {m.awayTeam}
+                  </div>
                 </div>
               ))}
-               {recentResults.length === 0 && (
-                <div className="text-xfl-text-dim italic text-center p-4">So'nggi natijalar topilmadi.</div>
-              )}
             </div>
           </div>
+
         </div>
 
-        {/* SIDEBAR: LEAGUE TABLE & TOP SCORERS */}
-        <div className="flex flex-col gap-8">
-          {/* LEAGUE TABLE */}
-          <div className="glass-card p-4">
-            <h2 className="text-xl font-bold mb-4">Turnir jadvali</h2>
+        {/* RIGHT 1 COL: INTERACTIVE LEAGUE TABLE & TOP SCORERS */}
+        <div className="space-y-8">
+
+          {/* LEAGUE TABLE (Clicking team opens ClubModal) */}
+          <div className="glass-card p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                <span>📊</span> Turnir Jadvali
+              </h3>
+              <span className="text-[10px] text-emerald-400 font-bold">11x11 / 9x9</span>
+            </div>
+
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-xfl-text-dim border-b border-xfl-border">
+              <table className="w-full text-xs text-left">
+                <thead className="text-[10px] font-black text-[var(--color-xfl-text-dim)] border-b border-[var(--color-xfl-border)] uppercase">
                   <tr>
-                    <th className="py-2">#</th>
+                    <th className="py-2 px-1">#</th>
                     <th className="py-2">Klub</th>
                     <th className="py-2 text-center">O'</th>
-                    <th className="py-2 text-center text-xfl-accent">G'</th>
+                    <th className="py-2 text-center text-green-400">G'</th>
                     <th className="py-2 text-center">D</th>
                     <th className="py-2 text-center text-red-400">M</th>
-                    <th className="py-2 text-center font-bold">O</th>
+                    <th className="py-2 text-center font-black text-white">O</th>
                   </tr>
                 </thead>
                 <tbody>
                   {topTeams.map((team, idx) => (
-                    <tr key={idx} className="border-b border-xfl-border/50 last:border-0 hover:bg-xfl-card-hover/50 transition-colors">
-                      <td className="py-3 font-semibold">{idx + 1}</td>
-                      <td className="py-3 font-semibold truncate max-w-[100px]">{team.name}</td>
-                      <td className="py-3 text-center">{team.played}</td>
-                      <td className="py-3 text-center">{team.won}</td>
-                      <td className="py-3 text-center">{team.drawn}</td>
-                      <td className="py-3 text-center">{team.lost}</td>
-                      <td className="py-3 text-center font-bold text-xfl-accent">{team.points}</td>
+                    <tr
+                      key={idx}
+                      onClick={() => {
+                        const clubObj = demoKlublar.find(c => c.name === team.club);
+                        if (clubObj) setSelectedClub(clubObj);
+                      }}
+                      className="border-b border-[var(--color-xfl-border)]/50 last:border-0 hover:bg-[var(--color-xfl-card-hover)] cursor-pointer transition-colors"
+                    >
+                      <td className="py-2.5 px-1 font-black text-gray-400">{idx + 1}</td>
+                      <td className="py-2.5 font-bold text-white truncate max-w-[110px]">{team.club}</td>
+                      <td className="py-2.5 text-center text-gray-300">{team.played}</td>
+                      <td className="py-2.5 text-center font-bold text-green-400">{team.won}</td>
+                      <td className="py-2.5 text-center text-gray-400">{team.drawn}</td>
+                      <td className="py-2.5 text-center text-red-400">{team.lost}</td>
+                      <td className="py-2.5 text-center font-black text-[var(--color-xfl-accent)]">{team.points}</td>
                     </tr>
                   ))}
-                  {topTeams.length === 0 && (
-                     <tr><td colSpan="7" className="py-4 text-center text-xfl-text-dim">Jadval bo'sh</td></tr>
-                  )}
                 </tbody>
               </table>
             </div>
+            <p className="text-[10px] text-[var(--color-xfl-text-dim)] mt-3 text-center italic">
+              Klub ustiga bosing — tarkibi va natijalarini ko'rasiz
+            </p>
           </div>
 
           {/* TOP SCORERS */}
-          <div className="glass-card p-4">
-            <h2 className="text-xl font-bold mb-4">To'purarlar</h2>
-            <div className="flex flex-col gap-3">
-              {scorers.slice(0, 5).map((player, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 rounded hover:bg-xfl-card-hover transition-colors">
+          <div className="glass-card p-5">
+            <h3 className="text-base font-black text-white mb-4 flex items-center gap-2">
+              <span>🎯</span> Eng Yaxshi To'purarlar
+            </h3>
+            <div className="space-y-2.5">
+              {scorers.map((pl, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    const plObj = demoOyinchilar.find(p => p.fullName === pl.name) || {
+                      fullName: pl.name,
+                      club: pl.club,
+                      position: 'ST',
+                      rating: 8.0,
+                      goals: pl.goals,
+                      matches: 20,
+                      isVerified: true
+                    };
+                    setSelectedPlayer(plObj);
+                  }}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--color-xfl-bg)] border border-[var(--color-xfl-border)] hover:border-amber-500/50 cursor-pointer transition-colors"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-xfl-primary to-xfl-accent flex items-center justify-center font-bold text-sm shadow-lg">
+                    <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center shrink-0">
                       {idx + 1}
-                    </div>
+                    </span>
                     <div>
-                      <div className="font-semibold">{player.name}</div>
-                      <div className="text-xs text-xfl-text-dim">{player.club}</div>
+                      <div className="font-bold text-xs text-white">{pl.name}</div>
+                      <div className="text-[10px] text-[var(--color-xfl-text-dim)]">{pl.club}</div>
                     </div>
                   </div>
-                  <div className="font-black text-xl text-xfl-orange">{player.goals}</div>
+                  <div className="text-right">
+                    <span className="text-base font-black text-amber-400">{pl.goals}</span>
+                    <span className="text-[9px] text-gray-400 font-bold block">GOL</span>
+                  </div>
                 </div>
               ))}
-               {scorers.length === 0 && (
-                  <div className="text-center text-xfl-text-dim py-4">To'purarlar ro'yxati bo'sh</div>
-               )}
             </div>
           </div>
+
         </div>
 
       </section>
 
-      {/* FOOTER */}
-      <footer className="mt-16 pt-8 border-t border-xfl-border text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6 pb-8">
-        <div>
-           <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-xfl-primary-light to-xfl-accent mb-2">XFL</div>
-           <p className="text-xfl-text-dim text-sm max-w-sm">Samarqand xavaskor futbol ligasi platformasi. Futbolni biz bilan birga rivojlantiring.</p>
+      {/* MODALS */}
+
+      {/* CREATE PLAYER CARD MODAL */}
+      {isCreateCardOpen && (
+        <CreatePlayerModal onClose={() => setIsCreateCardOpen(false)} />
+      )}
+
+      {/* CLUB MODAL */}
+      {selectedClub && (
+        <ClubModal club={selectedClub} onClose={() => setSelectedClub(null)} />
+      )}
+
+      {/* STADIUM MODAL */}
+      {selectedStadium && (
+        <StadiumModal stadium={selectedStadium} onClose={() => setSelectedStadium(null)} />
+      )}
+
+      {/* PLAYER MODAL (FC26 PREVIEW) */}
+      {selectedPlayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedPlayer(null)} />
+          <div className="relative z-10 animate-[slideUp_0.3s_ease-out]">
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setSelectedPlayer(null)}
+                className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <PlayerCard player={selectedPlayer} />
+          </div>
         </div>
-        <div className="flex gap-6 text-sm text-xfl-text-dim">
-           <Link href="#" className="hover:text-xfl-accent transition-colors">Qoidalar</Link>
-           <Link href="#" className="hover:text-xfl-accent transition-colors">Biz haqimizda</Link>
-           <Link href="#" className="hover:text-xfl-accent transition-colors">Aloqa</Link>
-        </div>
-        <div className="text-sm text-xfl-text-dim text-right">
-           <p>📍 Samarqand, O'zbekiston 🇺🇿</p>
-           <p className="mt-1">© 2025 XFL. Barcha huquqlar himoyalangan.</p>
-        </div>
-      </footer>
+      )}
+
     </div>
   );
 }
