@@ -1,0 +1,32 @@
+{
+  "name": "xfl",
+  "version": "1.0.0",
+  "private": true,
+  "description": "XFL — Xavaskor Futbol Ligasi. Samarqand viloyati xavaskor futbol platformasi.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:studio": "prisma studio",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "@prisma/client": "^5.22.0",
+    "next-auth": "^4.24.11",
+    "@auth/prisma-adapter": "^2.7.4",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.0",
+    "tailwindcss": "^4",
+    "prisma": "^5.22.0"
+  }
+}

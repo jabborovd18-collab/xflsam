@@ -1,0 +1,315 @@
+// XFL — Xavaskor Futbol Ligasi
+// Prisma Schema v1.0
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTH & USER MODELS
+// ============================================
+
+model User {
+  id             String    @id @default(cuid())
+  username       String    @unique
+  email          String?   @unique
+  phone          String?   @unique
+  password       String
+  fullName       String
+  avatar         String?
+  bio            String?
+  dateOfBirth    DateTime?
+  district       String?   // Samarqand tumani
+  role           String    @default("player") // player, captain, admin, superadmin
+  isVerified     Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // O'yinchi kartasi
+  playerCard     PlayerCard?
+
+  // Klub bilan bog'liq
+  ownedClubs     Club[]         @relation("ClubOwner")
+  clubMembership ClubMember[]
+
+  // Transfer
+  transfers      Transfer[]
+
+  // Stadion
+  ownedStadiums  Stadium[]      @relation("StadiumOwner")
+  bookings       StadiumBooking[]
+
+  // O'yin
+  matchEvents    MatchEvent[]
+
+  // Sharhlar
+  reviews        Review[]
+
+  // Auth
+  accounts       Account[]
+  sessions       Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// O'YINCHI KARTASI (SofaScore uslubida)
+// ============================================
+
+model PlayerCard {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  position    String   // GK, DEF, MID, FWD
+  foot        String?  // right, left, both
+  height      Int?     // sm
+  weight      Int?     // kg
+  number      Int?     // futbolka raqami
+
+  // Statistika
+  matches     Int      @default(0)
+  goals       Int      @default(0)
+  assists     Int      @default(0)
+  yellowCards Int      @default(0)
+  redCards    Int      @default(0)
+  cleanSheets Int     @default(0) // GK uchun
+  mvpCount    Int      @default(0)
+
+  // Qobiliyatlar (1-100)
+  pace        Int      @default(50) // tezlik
+  shooting    Int      @default(50) // zarba
+  passing     Int      @default(50) // uzatish
+  dribbling   Int      @default(50) // dribling
+  defense     Int      @default(50) // himoya
+  physical    Int      @default(50) // jismoniy
+
+  // Rating (avtomatik hisoblanadi)
+  rating      Float    @default(5.0)
+
+  // Transfer holati
+  isOnTransfer Boolean @default(false)
+  askingPrice  String? // masalan: "bepul", "kelishiladi"
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// KLUBLAR
+// ============================================
+
+model Club {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  shortName   String?  // qisqa nom (3-4 harf)
+  logo        String?  // logo URL
+  banner      String?  // banner rasm
+  description String?
+  district    String   // tuman
+  foundedYear Int?
+  homeStadium String?  // stadion nomi
+  color1      String?  // asosiy rang
+  color2      String?  // ikkinchi rang
+  isVerified  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+
+  // Statistika
+  wins        Int      @default(0)
+  draws       Int      @default(0)
+  losses      Int      @default(0)
+  goalsFor    Int      @default(0)
+  goalsAgainst Int     @default(0)
+  points      Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Munosabatlar
+  ownerId     String
+  owner       User         @relation("ClubOwner", fields: [ownerId], references: [id])
+  members     ClubMember[]
+  homeMatches Match[]      @relation("HomeTeam")
+  awayMatches Match[]      @relation("AwayTeam")
+  transfersIn Transfer[]   @relation("TransferTo")
+}
+
+model ClubMember {
+  id       String   @id @default(cuid())
+  userId   String
+  clubId   String
+  role     String   @default("player") // player, captain, coach, manager
+  joinedAt DateTime @default(now())
+  isActive Boolean  @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clubId])
+}
+
+// ============================================
+// TRANSFERLAR
+// ============================================
+
+model Transfer {
+  id          String   @id @default(cuid())
+  playerId    String
+  toClubId    String?
+  status      String   @default("open") // open, pending, accepted, rejected, closed
+  position    String   // qidirilayotgan pozitsiya
+  description String?
+  type        String   @default("free") // free, loan, trade
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  player      User     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  toClub      Club?    @relation("TransferTo", fields: [toClubId], references: [id])
+}
+
+// ============================================
+// STADIONLAR
+// ============================================
+
+model Stadium {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  district    String
+  description String?
+  capacity    Int?
+  images      String[] // rasmlar URL massivi
+  pricePerHour String? // narx
+  phone       String?
+  latitude    Float?
+  longitude   Float?
+
+  // Xususiyatlar
+  hasLighting    Boolean @default(false) // yoritgich
+  hasParking     Boolean @default(false) // parking
+  hasShower      Boolean @default(false) // dush
+  hasLockerRoom  Boolean @default(false) // kiyinish xonasi
+  surfaceType    String? // sun'iy, tabiiy, asfalt
+  fieldSize      String? // to'liq, yarim, mini
+
+  rating      Float   @default(0)
+  reviewCount Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownerId     String
+  owner       User            @relation("StadiumOwner", fields: [ownerId], references: [id])
+  bookings    StadiumBooking[]
+  reviews     Review[]
+  matches     Match[]
+}
+
+model StadiumBooking {
+  id        String   @id @default(cuid())
+  stadiumId String
+  userId    String
+  date      DateTime
+  startTime String   // "18:00"
+  endTime   String   // "20:00"
+  status    String   @default("pending") // pending, confirmed, cancelled
+  note      String?
+
+  createdAt DateTime @default(now())
+
+  stadium Stadium @relation(fields: [stadiumId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  stadiumId String
+  userId    String
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  stadium Stadium @relation(fields: [stadiumId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([stadiumId, userId])
+}
+
+// ============================================
+// O'YINLAR & NATIJALAR
+// ============================================
+
+model Match {
+  id          String   @id @default(cuid())
+  homeTeamId  String
+  awayTeamId  String
+  stadiumId   String?
+  date        DateTime
+  status      String   @default("scheduled") // scheduled, live, completed, cancelled
+
+  homeScore   Int?
+  awayScore   Int?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  homeTeam    Club     @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam    Club     @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  stadium     Stadium? @relation(fields: [stadiumId], references: [id])
+  events      MatchEvent[]
+}
+
+model MatchEvent {
+  id       String @id @default(cuid())
+  matchId  String
+  playerId String
+  type     String // goal, assist, yellow_card, red_card, substitution, mvp
+  minute   Int?
+  note     String?
+
+  match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player User  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// TUMAN MA'LUMOTLARI
+// ============================================
+
+model District {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+}
