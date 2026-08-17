@@ -1,399 +1,305 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
-// FC26 card — Tasdiqlangan va Tasdiqlanmagan
-export default function PlayerCard({ player, onClick }) {
+// EA Sports FC 26 Ultimate Team Style Card with 3D Parallax Tilt & Foil Shimmer
+export default function PlayerCard({ player, onClick, size = 'standard' }) {
+  const cardRef = useRef(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0, shadowX: 0, shadowY: 0 });
   const [isHovered, setIsHovered] = useState(false);
 
   if (!player) return null;
 
-  const isVerified = player.isVerified || false;
-  const rating = Math.round(player.rating * 10) || 75;
-  const position = player.position || 'CM';
+  const isVerified = player.isVerified !== undefined ? player.isVerified : true;
+  const rating = Math.round(player.rating ? (player.rating > 10 ? player.rating : player.rating * 10) : 84);
+  const position = player.position || 'ST';
 
-  // Stats mapping — demo data format support
+  // Stats mapping
   const stats = {
-    pac: player.pace || player.skills?.pace || 70,
-    sho: player.shooting || player.skills?.shooting || 65,
-    pas: player.passing || player.skills?.passing || 72,
-    dri: player.dribbling || player.skills?.dribbling || 68,
-    def: player.defense || player.skills?.defending || 50,
-    phy: player.physical || player.skills?.physical || 65,
+    pac: player.pace || player.skills?.pace || 85,
+    sho: player.shooting || player.skills?.shooting || 82,
+    pas: player.passing || player.skills?.passing || 76,
+    dri: player.dribbling || player.skills?.dribbling || 80,
+    def: player.defense || player.skills?.defending || 45,
+    phy: player.physical || player.skills?.physical || 78,
   };
 
-  // Card theme based on verification status
-  const theme = isVerified
-    ? {
-        // TASDIQLANGAN — Oltin/Premium FC26
-        bgGradient: 'linear-gradient(165deg, #3D2B0F 0%, #C6972F 20%, #F5D77A 40%, #DBAD3E 55%, #A67C1A 75%, #5C3E0A 100%)',
-        borderColor: '#C6972F',
-        glowColor: 'rgba(198, 151, 47, 0.5)',
-        textPrimary: '#3D2B0F',
-        textSecondary: '#5C3E0A',
-        statLabel: '#6B4C14',
-        statValue: '#3D2B0F',
-        dividerColor: 'rgba(61, 43, 15, 0.3)',
-        accentLine: '#3D2B0F',
-        badgeText: 'TASDIQLANGAN',
-        badgeBg: 'rgba(61, 43, 15, 0.8)',
-        badgeColor: '#F5D77A',
-      }
-    : {
-        // TASDIQLANMAGAN — Kumush/Oddiy
-        bgGradient: 'linear-gradient(165deg, #2A2D35 0%, #4A5568 20%, #8B95A5 40%, #6B7B8D 55%, #4A5568 75%, #2A2D35 100%)',
-        borderColor: '#6B7B8D',
-        glowColor: 'rgba(107, 123, 141, 0.3)',
-        textPrimary: '#1A1D23',
-        textSecondary: '#2A2D35',
-        statLabel: '#2D333B',
-        statValue: '#1A1D23',
-        dividerColor: 'rgba(26, 29, 35, 0.3)',
-        accentLine: '#2D333B',
-        badgeText: 'TASDIQLANMAGAN',
-        badgeBg: 'rgba(26, 29, 35, 0.6)',
-        badgeColor: '#8B95A5',
-      };
+  // 3D Tilt calculation on mouse move
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left; // x position within element.
+    const y = e.clientY - rect.top;  // y position within element.
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -14;
+    const rotateY = ((x - centerX) / centerX) * 14;
+
+    setTilt({
+      x: rotateX,
+      y: rotateY,
+      shadowX: (x - centerX) / 5,
+      shadowY: (y - centerY) / 5,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setTilt({ x: 0, y: 0, shadowX: 0, shadowY: 0 });
+  };
+
+  // Dimensions based on size prop
+  const sizeStyles = {
+    small: { width: '180px', height: '265px', ratingText: 'text-2xl', nameText: 'text-xs', statText: 'text-[11px]' },
+    standard: { width: '230px', height: '338px', ratingText: 'text-4xl', nameText: 'text-sm', statText: 'text-xs' },
+    large: { width: '280px', height: '412px', ratingText: 'text-5xl', nameText: 'text-base', statText: 'text-sm' },
+  }[size] || { width: '230px', height: '338px', ratingText: 'text-4xl', nameText: 'text-sm', statText: 'text-xs' };
+
+  // Position accent colors
+  const posBadgeColor = {
+    GK: '#D97706',
+    CB: '#2563EB',
+    LB: '#2563EB',
+    RB: '#2563EB',
+    DEF: '#2563EB',
+    CDM: '#059669',
+    CM: '#059669',
+    CAM: '#059669',
+    MID: '#059669',
+    LW: '#DC2626',
+    RW: '#DC2626',
+    ST: '#DC2626',
+    CF: '#DC2626',
+    FWD: '#DC2626',
+  }[position] || '#059669';
 
   return (
     <div
-      className="relative cursor-pointer select-none"
-      style={{ width: '220px', aspectRatio: '0.68' }}
+      ref={cardRef}
+      style={{
+        width: sizeStyles.width,
+        height: sizeStyles.height,
+        perspective: '1000px',
+      }}
+      className="relative cursor-pointer select-none group"
       onClick={() => onClick && onClick(player)}
+      onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* Card Container */}
+      {/* Outer Card Body with 3D Tilt transform */}
       <div
-        className="relative w-full h-full overflow-hidden"
         style={{
-          background: theme.bgGradient,
-          clipPath: 'polygon(10% 0%, 90% 0%, 100% 5%, 100% 92%, 92% 100%, 8% 100%, 0% 92%, 0% 5%)',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          transform: isHovered ? 'scale(1.05) translateY(-8px)' : 'scale(1)',
+          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${isHovered ? 1.05 : 1})`,
+          transition: isHovered ? 'transform 0.1s ease-out' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: isHovered
-            ? `0 20px 50px ${theme.glowColor}, 0 0 30px ${theme.glowColor}`
-            : `0 8px 20px rgba(0,0,0,0.4)`,
-          filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
+            ? `${tilt.shadowX}px ${tilt.shadowY + 20}px 40px -10px ${isVerified ? 'rgba(245, 158, 11, 0.45)' : 'rgba(148, 163, 184, 0.35)'}, 0 0 30px rgba(0, 230, 118, 0.2)`
+            : '0 12px 28px -8px rgba(0,0,0,0.7)',
         }}
+        className={`relative w-full h-full rounded-[24px] overflow-hidden p-[3px] transition-all duration-300 ${
+          isVerified
+            ? 'bg-gradient-to-b from-[#FDE047] via-[#D97706] to-[#451A03]'
+            : 'bg-gradient-to-b from-[#E2E8F0] via-[#64748B] to-[#0F172A]'
+        }`}
       >
-        {/* Inner border line */}
+        {/* Inner Card Cut Layer */}
         <div
-          className="absolute inset-[3px]"
-          style={{
-            clipPath: 'polygon(10% 0%, 90% 0%, 100% 5%, 100% 92%, 92% 100%, 8% 100%, 0% 92%, 0% 5%)',
-            border: `1px solid ${theme.dividerColor}`,
-          }}
-        />
+          className={`relative w-full h-full rounded-[21px] overflow-hidden flex flex-col justify-between p-3.5 ${
+            isVerified
+              ? 'bg-gradient-to-b from-[#221605] via-[#140C03] to-[#080501] text-[#FEF08A]'
+              : 'bg-gradient-to-b from-[#131926] via-[#0A0E17] to-[#030508] text-[#F1F5F9]'
+          }`}
+        >
+          {/* Holographic foil shimmer on hover */}
+          {isHovered && isVerified && <div className="fc26-foil-overlay" />}
 
-        {/* Transfer badge */}
-        {player.isOnTransfer && (
-          <div
-            className="absolute top-2 right-0 z-20 px-2 py-0.5 text-[8px] font-black tracking-wider"
-            style={{
-              background: '#00E676',
-              color: '#000',
-              clipPath: 'polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%)',
-              paddingLeft: '12px',
-            }}
-          >
-            TRANSFER
-          </div>
-        )}
-
-        {/* === TOP SECTION: Rating + Position + Player Image === */}
-        <div className="relative" style={{ height: '55%' }}>
-          {/* Rating & Position Column — Left Side */}
-          <div className="absolute left-3 top-4 z-10 flex flex-col items-center" style={{ width: '40px' }}>
-            {/* Overall Rating */}
-            <div
-              className="font-black leading-none"
-              style={{
-                fontSize: '36px',
-                color: theme.textPrimary,
-                textShadow: '0 1px 2px rgba(255,255,255,0.2)',
-                letterSpacing: '-2px',
-              }}
-            >
-              {rating}
+          {/* Transfer Badge Flag */}
+          {player.isOnTransfer && (
+            <div className="absolute top-0 right-0 z-30 bg-gradient-to-r from-[#00E676] to-[#00B359] text-[#041B0E] text-[9px] font-black tracking-widest px-3 py-1 rounded-bl-xl shadow-lg uppercase">
+              TRANSFER
             </div>
-            {/* Position */}
-            <div
-              className="font-bold leading-none mt-0.5"
-              style={{
-                fontSize: '13px',
-                color: theme.textPrimary,
-                letterSpacing: '1px',
-              }}
-            >
-              {position}
-            </div>
+          )}
 
-            {/* Separator line */}
-            <div className="w-5 my-1.5" style={{ height: '1px', background: theme.accentLine }} />
-
-            {/* Flag placeholder — UZB */}
-            <div
-              className="flex items-center justify-center rounded-sm overflow-hidden"
-              style={{ width: '18px', height: '12px', background: theme.dividerColor }}
-            >
-              <span style={{ fontSize: '8px', color: theme.textPrimary, fontWeight: 700 }}>UZ</span>
-            </div>
-
-            {/* Club placeholder */}
-            <div
-              className="mt-1 flex items-center justify-center rounded-sm"
-              style={{
-                width: '20px',
-                height: '20px',
-                background: theme.dividerColor,
-                fontSize: '8px',
-                fontWeight: 800,
-                color: theme.textPrimary,
-              }}
-            >
-              {player.club ? player.club.substring(0, 2).toUpperCase() : 'XF'}
-            </div>
-          </div>
-
-          {/* Player Silhouette / Avatar */}
-          <div className="absolute right-2 bottom-0 z-10" style={{ width: '65%', height: '90%' }}>
-            <div className="relative w-full h-full flex items-end justify-center">
-              {/* Player silhouette SVG */}
-              <svg
-                viewBox="0 0 200 280"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-full h-full"
-                style={{ opacity: 0.85 }}
+          {/* TOP SECTION: OVR, Position, Nation, Club Crest, Player Silhouette */}
+          <div className="relative flex justify-between items-start pt-1 z-10">
+            {/* Left Attribute Column */}
+            <div className="flex flex-col items-center z-20 min-w-[42px]">
+              {/* OVR Number */}
+              <div
+                className={`font-black tracking-tighter leading-none ${sizeStyles.ratingText} drop-shadow-md ${
+                  isVerified
+                    ? 'text-transparent bg-clip-text bg-gradient-to-b from-[#FFFBEB] to-[#FBBF24]'
+                    : 'text-white'
+                }`}
               >
+                {rating}
+              </div>
+
+              {/* Position Tag */}
+              <div
+                style={{ backgroundColor: posBadgeColor }}
+                className="mt-1 px-1.5 py-0.5 rounded text-[10px] font-black text-white tracking-wider shadow-sm"
+              >
+                {position}
+              </div>
+
+              {/* Separator */}
+              <div className="w-5 h-[1px] bg-white/20 my-1.5" />
+
+              {/* Uzbekistan Flag */}
+              <div className="flex items-center justify-center shadow-sm rounded overflow-hidden" title="O'zbekiston">
+                <span className="text-xs">🇺🇿</span>
+              </div>
+
+              {/* Club Monogram Crest */}
+              <div
+                className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[9px] font-black mt-1 text-white shadow-inner"
+                title={player.club || "Samarqand"}
+              >
+                {(player.club || "XFL").substring(0, 2).toUpperCase()}
+              </div>
+            </div>
+
+            {/* Right Player Image / Avatar Silhouette */}
+            <div className="flex-1 h-36 flex items-end justify-center relative -mr-2">
+              <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-xl">
+                {/* Silhouette Glow */}
+                <circle cx="100" cy="65" r="36" fill={isVerified ? '#F59E0B' : '#94A3B8'} fillOpacity="0.2" />
                 {/* Head */}
-                <circle cx="100" cy="60" r="35" fill={theme.textPrimary} opacity="0.25" />
-                {/* Body */}
+                <circle cx="100" cy="65" r="32" fill={isVerified ? '#FBBF24' : '#CBD5E1'} />
+                {/* Jersey Body */}
                 <path
-                  d="M55 100 C55 85, 145 85, 145 100 L155 220 C155 240, 130 260, 100 260 C70 260, 45 240, 45 220 Z"
-                  fill={theme.textPrimary}
-                  opacity="0.2"
+                  d="M50 110 C50 90, 150 90, 150 110 L160 210 C160 225, 140 235, 100 235 C60 235, 40 225, 40 210 Z"
+                  fill={isVerified ? '#D97706' : '#64748B'}
                 />
-                {/* Jersey lines */}
-                <path d="M75 110 L75 180" stroke={theme.textPrimary} strokeWidth="1" opacity="0.15" />
-                <path d="M125 110 L125 180" stroke={theme.textPrimary} strokeWidth="1" opacity="0.15" />
-                {/* Shorts */}
-                <path
-                  d="M65 190 L60 240 L100 235 L140 240 L135 190 Z"
-                  fill={theme.textPrimary}
-                  opacity="0.18"
-                />
-                {/* Player initial */}
+                {/* Collar & Stripes */}
+                <path d="M85 100 L100 120 L115 100 Z" fill={isVerified ? '#FEF08A' : '#F8FAFC'} />
+                <path d="M100 120 L100 235" stroke={isVerified ? '#FEF08A' : '#F8FAFC'} strokeWidth="3" strokeOpacity="0.6" />
+                {/* Player Initial on Chest */}
                 <text
                   x="100"
-                  y="160"
+                  y="175"
                   textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill={theme.textPrimary}
-                  fontSize="48"
+                  fill="#FFFFFF"
+                  fontSize="28"
                   fontWeight="900"
-                  opacity="0.15"
+                  fillOpacity="0.9"
                 >
-                  {(player.fullName || player.name || 'X')[0]}
+                  {(player.fullName || player.name || 'J')[0]}
                 </text>
               </svg>
             </div>
           </div>
 
-          {/* Decorative pattern overlay */}
-          <div
-            className="absolute inset-0 opacity-5"
-            style={{
-              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, ${theme.textPrimary} 10px, ${theme.textPrimary} 11px)`,
-            }}
-          />
-        </div>
-
-        {/* === BOTTOM SECTION: Name + Stats === */}
-        <div className="relative" style={{ height: '45%' }}>
-          {/* Divider line with diamond */}
-          <div className="relative flex items-center justify-center px-4" style={{ height: '14px' }}>
-            <div className="flex-1" style={{ height: '1px', background: theme.accentLine, opacity: 0.5 }} />
-            <div
-              className="mx-2"
-              style={{
-                width: '8px',
-                height: '8px',
-                background: theme.accentLine,
-                transform: 'rotate(45deg)',
-                opacity: 0.6,
-              }}
-            />
-            <div className="flex-1" style={{ height: '1px', background: theme.accentLine, opacity: 0.5 }} />
-          </div>
-
-          {/* Player Name */}
-          <div className="text-center px-3 mt-0.5">
-            <div
-              className="font-black uppercase tracking-wider truncate"
-              style={{
-                fontSize: '14px',
-                color: theme.textPrimary,
-                lineHeight: '1.1',
-                textShadow: '0 1px 1px rgba(255,255,255,0.15)',
-              }}
-            >
-              {(player.fullName || player.name || 'Noma\'lum').split(' ').pop()}
+          {/* BOTTOM SECTION: Name, Divider, 6 Hex Stats, Verification Ribbon */}
+          <div className="relative z-10 space-y-2">
+            {/* Player Name */}
+            <div className="text-center">
+              <h4
+                className={`font-black uppercase tracking-wider truncate leading-tight ${sizeStyles.nameText} ${
+                  isVerified ? 'text-amber-100 drop-shadow' : 'text-white'
+                }`}
+              >
+                {(player.fullName || player.name || 'O\'yinchi').split(' ').pop()}
+              </h4>
+              <p className="text-[10px] text-white/50 tracking-tight">
+                {player.age || 22} yosh • {player.district || "Samarqand"}
+              </p>
             </div>
-          </div>
 
-          {/* Stats Grid — FC26 Style */}
-          <div className="px-4 mt-2">
-            <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+            {/* Gold Geometric Separator */}
+            <div className="flex items-center justify-center gap-1 opacity-60">
+              <div className="h-[1px] flex-1 bg-current" />
+              <div className="w-1.5 h-1.5 rotate-45 bg-current" />
+              <div className="h-[1px] flex-1 bg-current" />
+            </div>
+
+            {/* FC 26 Stats Matrix (2 columns x 3 rows) */}
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 px-1">
               {[
-                { label: 'TEZ', value: stats.pac },
-                { label: 'ZAR', value: stats.sho },
-                { label: 'UZA', value: stats.pas },
-                { label: 'DRI', value: stats.dri },
-                { label: 'HIM', value: stats.def },
-                { label: 'JIS', value: stats.phy },
-              ].map((stat, i) => (
-                <div key={i} className="flex items-center justify-center gap-1.5">
-                  <span
-                    className="font-black"
-                    style={{ fontSize: '13px', color: theme.statValue, lineHeight: 1 }}
-                  >
-                    {stat.value}
+                { key: 'PAC', label: 'TEZ', val: stats.pac },
+                { key: 'DRI', label: 'DRI', val: stats.dri },
+                { key: 'SHO', label: 'ZAR', val: stats.sho },
+                { key: 'DEF', label: 'HIM', val: stats.def },
+                { key: 'PAS', label: 'UZA', val: stats.pas },
+                { key: 'PHY', label: 'JIS', val: stats.phy },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between text-white/90">
+                  <span className={`font-black ${sizeStyles.statText} tabular-nums ${isVerified ? 'text-amber-300' : 'text-white'}`}>
+                    {item.val}
                   </span>
-                  <span
-                    className="font-semibold"
-                    style={{ fontSize: '9px', color: theme.statLabel, letterSpacing: '0.5px', lineHeight: 1 }}
-                  >
-                    {stat.label}
+                  <span className="text-[9px] font-bold text-white/60 tracking-wider">
+                    {item.label}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Verification Badge */}
-          <div className="flex justify-center mt-2">
-            <div
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-              style={{
-                background: theme.badgeBg,
-                fontSize: '7px',
-                fontWeight: 800,
-                color: theme.badgeColor,
-                letterSpacing: '1.5px',
-              }}
-            >
-              {isVerified && (
-                <svg width="8" height="8" viewBox="0 0 16 16" fill={theme.badgeColor}>
-                  <path d="M8 0L10 5.3 16 6.2 11.8 10 13 16 8 13.2 3 16 4.2 10 0 6.2 6 5.3z" />
-                </svg>
+            {/* Verification Status Ribbon */}
+            <div className="pt-1 flex items-center justify-center">
+              {isVerified ? (
+                <span className="inline-flex items-center gap-1 text-[8px] font-black tracking-widest text-amber-300 bg-amber-400/20 border border-amber-400/40 px-2 py-0.5 rounded-full uppercase shadow-sm">
+                  ★ TASDIQLANGAN (GOLD)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[8px] font-black tracking-widest text-slate-300 bg-slate-400/10 border border-slate-400/20 px-2 py-0.5 rounded-full uppercase">
+                  ◇ HAVASKOR (SILVER)
+                </span>
               )}
-              {theme.badgeText}
             </div>
           </div>
-
-          {/* Match stats row */}
-          <div className="flex justify-center gap-3 mt-1.5 px-3">
-            {[
-              { label: "O'YIN", value: player.matches || 0 },
-              { label: 'GOL', value: player.goals || 0 },
-              { label: 'PAS', value: player.assists || 0 },
-            ].map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="font-black" style={{ fontSize: '11px', color: theme.textPrimary, lineHeight: 1 }}>
-                  {s.value}
-                </div>
-                <div style={{ fontSize: '6px', color: theme.statLabel, fontWeight: 700, letterSpacing: '0.5px' }}>
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-
-        {/* Shine effect on hover */}
-        {isHovered && (
-          <div
-            className="absolute inset-0 z-20 pointer-events-none"
-            style={{
-              background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 55%, transparent 60%)',
-              animation: 'cardShine 0.8s ease forwards',
-            }}
-          />
-        )}
       </div>
     </div>
   );
 }
 
-// Mini versiyasi — ro'yxat uchun
+// Mini horizontal card component for search results and compact lists
 export function PlayerCardMini({ player, onClick }) {
   if (!player) return null;
 
-  const isVerified = player.isVerified || false;
-  const rating = Math.round(player.rating * 10) || 75;
+  const isVerified = player.isVerified !== undefined ? player.isVerified : true;
+  const rating = Math.round(player.rating ? (player.rating > 10 ? player.rating : player.rating * 10) : 84);
 
   return (
     <div
-      className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-[rgba(26,35,64,0.6)] group"
-      style={{ border: '1px solid var(--color-xfl-border)' }}
       onClick={() => onClick && onClick(player)}
+      className="glass-card p-3 flex items-center gap-3 cursor-pointer hover:scale-[1.02] transition-all border border-[var(--color-xfl-border)]"
     >
-      {/* Mini card rating badge */}
+      {/* OVR Badge */}
       <div
-        className="flex-shrink-0 w-12 h-14 flex flex-col items-center justify-center rounded-lg font-black"
-        style={{
-          background: isVerified
-            ? 'linear-gradient(165deg, #C6972F, #F5D77A)'
-            : 'linear-gradient(165deg, #4A5568, #8B95A5)',
-          color: isVerified ? '#3D2B0F' : '#1A1D23',
-        }}
+        className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 shadow-md ${
+          isVerified
+            ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black'
+            : 'bg-gradient-to-br from-slate-300 to-slate-500 text-black'
+        }`}
       >
-        <span className="text-lg leading-none">{rating}</span>
-        <span className="text-[8px] font-bold mt-0.5">{player.position}</span>
+        <span className="text-base font-black leading-none">{rating}</span>
+        <span className="text-[9px] font-extrabold uppercase mt-0.5">{player.position || 'ST'}</span>
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="font-bold text-sm text-[var(--color-xfl-text)] truncate">
+        <h4 className="text-xs font-black text-white truncate">
           {player.fullName || player.name}
-        </div>
-        <div className="text-xs text-[var(--color-xfl-text-dim)] flex items-center gap-2 mt-0.5">
-          <span>{player.age || 20} yosh</span>
-          <span>•</span>
-          <span>{player.district}</span>
-        </div>
-        <div className="text-xs mt-1 flex gap-2">
-          {player.club ? (
-            <span className="text-blue-400">{player.club}</span>
-          ) : (
-            <span className="text-[var(--color-xfl-accent)]">Bo'sh o'yinchi</span>
-          )}
-          {isVerified && (
-            <span className="text-yellow-500 flex items-center gap-0.5 text-[10px]">
-              ★ Tasdiqlangan
-            </span>
-          )}
-        </div>
+        </h4>
+        <p className="text-[10px] text-[var(--color-xfl-text-dim)] truncate">
+          {player.club || "Bo'sh O'yinchi"} • {player.district || "Samarqand"}
+        </p>
       </div>
 
-      {/* Stats mini */}
-      <div className="flex gap-3 text-center flex-shrink-0">
+      {/* Match Stats */}
+      <div className="flex items-center gap-2 text-right shrink-0">
         <div>
-          <div className="text-sm font-bold text-[var(--color-xfl-text)]">{player.goals || 0}</div>
-          <div className="text-[9px] text-[var(--color-xfl-text-dim)]">GOL</div>
+          <div className="text-xs font-black text-[var(--color-xfl-accent)]">{player.goals || 0}</div>
+          <div className="text-[8px] font-bold text-gray-400 uppercase">Gol</div>
         </div>
         <div>
-          <div className="text-sm font-bold text-[var(--color-xfl-text)]">{player.assists || 0}</div>
-          <div className="text-[9px] text-[var(--color-xfl-text-dim)]">PAS</div>
+          <div className="text-xs font-black text-amber-400">{player.assists || 0}</div>
+          <div className="text-[8px] font-bold text-gray-400 uppercase">Pas</div>
         </div>
       </div>
-
-      {/* Transfer indicator */}
-      {player.isOnTransfer && (
-        <div className="flex-shrink-0 w-2 h-2 rounded-full bg-[var(--color-xfl-accent)] animate-pulse" />
-      )}
     </div>
   );
 }
