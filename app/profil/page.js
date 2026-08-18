@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { demoOyinchilar } from '@/data/demo-data';
 import PlayerCard from '@/components/PlayerCard';
 import CreatePlayerModal from '@/components/CreatePlayerModal';
+import PlayerRadarHeatmap from '@/components/PlayerRadarHeatmap';
 import { exportPlayerCardAsPNG } from '@/lib/exportCard';
 
 export default function ProfilPage() {
@@ -171,7 +172,7 @@ export default function ProfilPage() {
           </div>
         </div>
 
-        {/* RIGHT 2 COLUMNS: CAREER STATS & RADAR & TROPHIES */}
+        {/* RIGHT 2 COLUMNS: SOFASCORE RADAR & HEATMAP & METRICS & TROPHIES */}
         <div className="space-y-6 lg:col-span-2">
 
           {/* 4 CORE CAREER STAT METRICS */}
@@ -191,6 +192,9 @@ export default function ProfilPage() {
               </div>
             ))}
           </div>
+
+          {/* SOFASCORE SKILL RADAR & THERMAL PITCH HEATMAP */}
+          <PlayerRadarHeatmap player={user} />
 
           {/* DETAILED FC26 SKILL BARS */}
           <div className="glass-card p-6 sm:p-7 space-y-4">
