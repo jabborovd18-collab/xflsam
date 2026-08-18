@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { demoOyinchilar } from '@/data/demo-data';
 import PlayerCard from '@/components/PlayerCard';
 import CreatePlayerModal from '@/components/CreatePlayerModal';
+import { exportPlayerCardAsPNG } from '@/lib/exportCard';
 
 export default function ProfilPage() {
   const [user, setUser] = useState(demoOyinchilar[0] || {
@@ -86,10 +87,19 @@ export default function ProfilPage() {
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-2 justify-center">
               <button
+                onClick={() => exportPlayerCardAsPNG(user)}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-black text-xs font-black flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
+                title="Instagram / Telegram Story uchun rasm qilib saqlash"
+              >
+                <span>📸</span>
+                <span>Kartani Yuklab Olish (PNG)</span>
+              </button>
+
+              <button
                 onClick={() => setIsEditOpen(true)}
                 className="btn-primary py-2.5 px-5 text-xs font-black shadow-lg"
               >
-                ✏️ Kartani Tahrirlash
+                ✏️ Tahrirlash
               </button>
 
               <button
@@ -100,7 +110,7 @@ export default function ProfilPage() {
                     : 'bg-gradient-to-r from-amber-400 to-yellow-300 text-black border-amber-300 font-black shadow-lg shadow-amber-500/25'
                 }`}
               >
-                {user.isVerified ? '◇ Kumush Rejimga O\'tish' : '★ Oltin Maqomga O\'tish'}
+                {user.isVerified ? '◇ Kumush Rejim' : '★ Oltin Maqom'}
               </button>
             </div>
           </div>
@@ -121,11 +131,13 @@ export default function ProfilPage() {
               <PlayerCard player={user} size="standard" />
             </div>
 
-            <p className="text-[11px] text-[var(--color-xfl-text-dim)] text-center mt-4 leading-relaxed">
-              {user.isVerified
-                ? "★ Sizning kartangiz platforma tomonidan to'liq tasdiqlangan va rasmiy Oltin maqomiga ega."
-                : "◇ Sizning kartangiz hozircha oddiy havaskor holatida."}
-            </p>
+            <button
+              onClick={() => exportPlayerCardAsPNG(user)}
+              className="mt-4 btn-primary w-full py-2.5 text-xs font-black justify-center flex items-center gap-2"
+            >
+              <span>📸</span>
+              <span>HD Rasm (PNG) Yuklash</span>
+            </button>
           </div>
 
           {/* TRANSFER STATUS BOX */}
