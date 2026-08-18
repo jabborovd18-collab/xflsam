@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import LiveTicker from './LiveTicker';
 import CreatePlayerModal from './CreatePlayerModal';
+import PenaltyGameModal from './PenaltyGameModal';
+import PackOpeningModal from './PackOpeningModal';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -13,7 +15,11 @@ export default function Navbar() {
   const [theme, setTheme] = useState('default');
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  
+  // Modals
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isPenaltyGameOpen, setIsPenaltyGameOpen] = useState(false);
+  const [isPackOpen, setIsPackOpen] = useState(false);
 
   useEffect(() => {
     const savedLang = localStorage.getItem('xfl_lang') || 'uz';
@@ -95,7 +101,7 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all duration-200 flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all duration-200 flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-[var(--color-xfl-accent)] text-[#041B0E] shadow-md shadow-green-500/30'
                       : 'text-gray-300 hover:text-white hover:bg-white/5'
@@ -107,6 +113,27 @@ export default function Navbar() {
               );
             })}
           </nav>
+
+          {/* GAME ACTION BUTTONS (FC PENALTY ARCADE & PACK OPENING) */}
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => setIsPenaltyGameOpen(true)}
+              className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-700/30 transition-all hover:scale-105 border border-white/20"
+              title="FC 27 Penalty Mini-O'yini"
+            >
+              <span>🎮</span>
+              <span>FC O'yin</span>
+            </button>
+
+            <button
+              onClick={() => setIsPackOpen(true)}
+              className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-black text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-500/30 transition-all hover:scale-105 border border-white/20"
+              title="EA Sports FC 26 Pak Ochish"
+            >
+              <span>📦</span>
+              <span>Pak Ochish</span>
+            </button>
+          </div>
 
           {/* Right Action Controls: Theme + Language + Create Card Button */}
           <div className="hidden sm:flex items-center gap-2.5">
@@ -187,22 +214,29 @@ export default function Navbar() {
               onClick={() => setIsCreateOpen(true)}
               className="btn-primary py-2.5 px-4 text-xs font-black shadow-lg shadow-green-500/25 shrink-0"
             >
-              ⚽ Karta Yaratish
+              ⚽ Karta
             </button>
           </div>
 
           {/* Mobile Hamburger Toggle Button */}
           <div className="flex items-center gap-2 lg:hidden">
             <button
-              onClick={() => setIsCreateOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-[#041B0E] font-black text-xs"
+              onClick={() => setIsPenaltyGameOpen(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white font-black text-xs"
             >
-              ⚽ Karta
+              🎮 O'yin
+            </button>
+
+            <button
+              onClick={() => setIsPackOpen(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500 text-black font-black text-xs"
+            >
+              📦 Pak
             </button>
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white"
+              className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white"
             >
               {isOpen ? '✕' : '☰'}
             </button>
@@ -276,6 +310,16 @@ export default function Navbar() {
       {/* Global FC26 Card Creator Modal */}
       {isCreateOpen && (
         <CreatePlayerModal onClose={() => setIsCreateOpen(false)} />
+      )}
+
+      {/* Global FC27 Penalty Shootout Game Modal */}
+      {isPenaltyGameOpen && (
+        <PenaltyGameModal onClose={() => setIsPenaltyGameOpen(false)} />
+      )}
+
+      {/* Global FC Ultimate Pack Opening Modal */}
+      {isPackOpen && (
+        <PackOpeningModal onClose={() => setIsPackOpen(false)} />
       )}
     </>
   );
