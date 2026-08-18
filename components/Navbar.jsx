@@ -58,6 +58,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/', label: lang === 'uz' ? 'Bosh sahifa' : lang === 'ru' ? 'Главная' : 'Асосӣ', icon: '🏠' },
+    { href: '/fc27', label: 'FC 27 Match', icon: '🎮' },
     { href: '/klublar', label: lang === 'uz' ? 'Klublar' : lang === 'ru' ? 'Клубы' : 'Клубҳо', icon: '🛡️' },
     { href: '/transferlar', label: lang === 'uz' ? 'Transferlar' : lang === 'ru' ? 'Трансферы' : 'Трансферҳо', icon: '🔄' },
     { href: '/stadionlar', label: lang === 'uz' ? 'Stadionlar' : lang === 'ru' ? 'Стадионы' : 'Варзишгоҳҳо', icon: '🏟️' },
@@ -122,7 +123,7 @@ export default function Navbar() {
               title="FC 27 Penalty Mini-O'yini"
             >
               <span>🎮</span>
-              <span>FC O'yin</span>
+              <span>Penalti O'yin</span>
             </button>
 
             <button
@@ -220,12 +221,12 @@ export default function Navbar() {
 
           {/* Mobile Hamburger Toggle Button */}
           <div className="flex items-center gap-2 lg:hidden">
-            <button
-              onClick={() => setIsPenaltyGameOpen(true)}
+            <Link
+              href="/fc27"
               className="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white font-black text-xs"
             >
-              🎮 O'yin
-            </button>
+              🎮 Match
+            </Link>
 
             <button
               onClick={() => setIsPackOpen(true)}
